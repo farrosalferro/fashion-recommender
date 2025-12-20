@@ -33,6 +33,9 @@ dependencies = [
     "langchain-openai>=1.1.0",
     "ddgs>=9.9.3",
     "tavily-python>=0.7.14",
+    "fastapi>=0.124.4",
+    "pydantic-settings>=2.12.0",
+    "uvicorn>=0.38.0",
 ]
 
 [tool.uv.sources]

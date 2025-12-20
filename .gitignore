@@ -11,11 +11,16 @@ wheels/
 .vscode
 
 
-# api key
+# credentials
 openai_api_key.txt
+.env
 
 # data
 data/
 notebooks/
 qdrant_storage/
 scraper/
+prompts/
+examples/
+
+/src/frontend
