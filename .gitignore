@@ -22,5 +22,3 @@ qdrant_storage/
 scraper/
 prompts/
 examples/
-
-/src/frontend

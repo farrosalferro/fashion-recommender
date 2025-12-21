@@ -18,6 +18,9 @@ class ImageSource(BaseModel):
     @field_validator("path")
     @classmethod
     def validate_path(cls, v: str) -> str:
+        if v.startswith("data:image"):
+            return v
+
         url_scheme = urlparse(v)
         if url_scheme.scheme in ("http", "https"):
             return v
@@ -70,7 +73,7 @@ class AgentResponse(BaseModel):
     answer: str = Field(description="Answer to the question.")
     final_answer: bool = False
     tool_calls: List[ToolCall] = Field(default_factory=list)
-    image_ids: UserProvidedImages | RetrievedImages = Field(None, discriminator="type")
+    image_ids: RetrievedImages | None = None
 
 
 # Graph State
