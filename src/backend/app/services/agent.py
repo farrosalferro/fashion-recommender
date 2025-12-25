@@ -1,4 +1,4 @@
-from langsmith import traceable
+from langsmith import traceable, get_current_run_tree
 from src.backend.app.models.schemas import AgentResponse, State
 from jinja2 import Template
 import instructor
@@ -49,6 +49,15 @@ def agent_node(state: State) -> dict:
                 pass
             else:
                 state.image_ids.append(response.image_ids)
+
+    current_run = get_current_run_tree()
+
+    if current_run:
+        current_run.metadata["usage_metadata"] = {
+            "input_tokens": raw_response.usage.prompt_tokens,
+            "output_tokens": raw_response.usage.completion_tokens,
+            "total_tokens": raw_response.usage.total_tokens
+        }
 
     return {
         "messages": [ai_message],

@@ -12,9 +12,10 @@ class PromptManager:
 
     def load_all(self) -> None:
         try:
-            self._prompts["agent"] = self.client.pull_prompt("agent-prompt:v1-0-0")
+            self._prompts["agent"] = self.client.pull_prompt("agent-prompt:v1-0-1")
             self._prompts["descriptor"] = self.client.pull_prompt("descriptor-prompt:v1-0-0")
             self._prompts["recommender"] = self.client.pull_prompt("recommender-prompt:v1-0-0")
+            self._prompts["vton"] = self.client.pull_prompt("vton-prompt:v1-0-0")
         except Exception as e:
             raise ValueError(f"Failed to load prompts: {e}")
 

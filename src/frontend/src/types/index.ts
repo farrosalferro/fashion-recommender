@@ -2,13 +2,14 @@ export interface ChatRequest {
     query: string;
     session_id: string | null;
     images: string[] | null;
+    model_image: string | null;
 }
 
 export interface ImageResult {
     image_id: string;
     url: string;
     bbox: [number, number, number, number] | null;
-    type: "user_provided" | "retrieved";
+    type: "user_provided" | "retrieved" | "virtual_try_on";
 }
 
 export interface ChatResponse {

@@ -20,5 +20,4 @@ data/
 notebooks/
 qdrant_storage/
 scraper/
-prompts/
 examples/

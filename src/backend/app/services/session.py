@@ -22,10 +22,16 @@ class SessionManager:
             self._sessions[session_id] = Session(image_source_store={}, image_ids_store=[], message_history=[])
             return session_id
 
-    def store_image_source(self, session_id: str, image_data: ImageSource) -> str:
+    def get_model_source(self, session_id) -> ImageSource:
+        model_image_id = self._sessions[session_id].model_image_id
+        return self._sessions[session_id].image_source_store.get(model_image_id)
+
+    def store_image_source(self, session_id: str, image_data: ImageSource, is_model: bool = False) -> str:
         key_string = f"{image_data.path}:{image_data.bbox}"
         unique_id = hashlib.md5(key_string.encode()).hexdigest()[:7]
         self._sessions[session_id].image_source_store[unique_id] = image_data
+        if is_model:
+            self._sessions[session_id].model_image_id = unique_id
         return unique_id
 
     def get_image_source(self, session_id: str, image_id: str) -> ImageSource:

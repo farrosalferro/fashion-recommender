@@ -7,6 +7,7 @@ from src.backend.app.services.descriptor import create_get_item_descriptions
 from src.backend.app.services.recommender import get_recommendations
 from src.backend.app.services.retrieval import create_retrieve_item_from_wardrobe
 from src.backend.app.services.search import search_item
+from src.backend.app.services.vton import create_virtual_try_on_image
 from src.backend.app.utils.utils import get_tool_descriptions
 from src.backend.app.services.agent import agent_node
 from src.backend.app.models.schemas import ChatRequest, ChatResponse, ImageResult, UserProvidedImages, ImageSource, RetrievedImages
@@ -40,6 +41,7 @@ def get_graph(
         get_recommendations,
         create_retrieve_item_from_wardrobe(session_id, model, processor, q_client),
         search_item,
+        create_virtual_try_on_image(session_id),
     ]
     tool_node = ToolNode(descriptor_tool)
     tool_descriptions = get_tool_descriptions(descriptor_tool)
@@ -80,23 +82,35 @@ def invoke_graph(
     if (len(message_history) > 0 and isinstance(message_history[-1], AIMessage)) \
         and (len(image_ids_history) > 0 and isinstance(image_ids_history[-1], RetrievedImages)):
 
+        # converting retrieved images to text
+        retrieved_image_ids_text = "\nRetrieved images:"
         last_image_ids = image_ids_history[-1].image_ids
-        last_message = message_history.pop().content + " " + " ".join(last_image_ids)
+        for i, last_image_id in enumerate(last_image_ids):
+            retrieved_image_ids_text += f"\n{i+1}. {last_image_id}"
+        last_message = message_history.pop().content + retrieved_image_ids_text
         message_history.append(AIMessage(content=last_message))
 
     # converting image urls or local file paths to image ids
+    user_provided_image_ids_text = ""
     user_provided_images = None
     image_ids = []
     if chat_request.images:
-        for image in chat_request.images:
+        user_provided_image_ids_text = "\nUser provided fashion item images:"
+        for i, image in enumerate(chat_request.images):
             image_source = ImageSource(path=image, bbox=None)
-            image_ids.append(deps.session_manager.store_image_source(session_id, image_source))
+            image_id = deps.session_manager.store_image_source(session_id, image_source)
+            image_ids.append(image_id)
+            user_provided_image_ids_text += f"\n{i+1}. {image_id}"
         user_provided_images = UserProvidedImages(image_ids=image_ids)
+
+    if chat_request.model_image:
+        model_image_source = ImageSource(path=chat_request.model_image, bbox=None)
+        model_image_id = deps.session_manager.store_image_source(session_id, model_image_source, is_model=True)
 
     graph, tool_descriptions = get_graph(session_id, model, processor, qdrant_client)
 
     # appending the image_ids to the query
-    query = {"role": "user", "content": chat_request.query + (" " + " ".join(image_ids) if image_ids else "")}
+    query = {"role": "user", "content": chat_request.query + user_provided_image_ids_text}
 
     # initializing the state
     initial_state = {

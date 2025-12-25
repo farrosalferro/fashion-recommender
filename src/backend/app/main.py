@@ -8,7 +8,7 @@ from transformers import CLIPModel, CLIPProcessor
 from src.backend.app.services.session import SessionManager
 from src.backend.app.models.schemas import ChatRequest
 from src.backend.app.services.graph import invoke_graph
-from src.backend.app.prompts import PromptManager
+from src.backend.app.prompt_manager import PromptManager
 
 
 @asynccontextmanager

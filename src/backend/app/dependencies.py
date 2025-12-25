@@ -1,7 +1,7 @@
 from qdrant_client import QdrantClient
 from transformers import CLIPModel, CLIPProcessor
 from src.backend.app.services.session import SessionManager
-from src.backend.app.prompts import PromptManager
+from src.backend.app.prompt_manager import PromptManager
 
 
 class AppDependencies:

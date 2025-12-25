@@ -59,7 +59,7 @@ def parse_recommendations(recommendations: dict[str, FashionSet]) -> str:
         raise ValueError("recommendations must be a dictionary")
 
     output_parts = []
-    for fashion_set_name, fashion_set in recommendations.items():
+    for fashion_set_name, fashion_set in items_to_parse:
         output = f"{fashion_set_name}:\n"
         output += f"\tItems: {fashion_set.items}\n"
         output += f"\tReason: {fashion_set.reason}\n"
