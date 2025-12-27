@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import ChatMessage from "@/components/ChatMessage";
 import ChatInput from "@/components/ChatInput";
 import { Message, ChatResponse } from "@/types";
@@ -13,6 +13,7 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleSetModelImage = (file: File | null) => {
     setModelImage(file);
@@ -72,6 +73,10 @@ export default function Home() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isLoading])
 
   return (
     <div className="flex h-screen flex-col bg-white dark:bg-gray-900">
@@ -136,6 +141,7 @@ export default function Home() {
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
         )}
       </main>

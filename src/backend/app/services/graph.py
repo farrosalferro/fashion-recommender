@@ -130,13 +130,12 @@ def invoke_graph(
         deps.session_manager.store_image_ids(session_id, img_group)
         for img_id in img_group.image_ids:
             img_source = deps.session_manager.get_image_source(session_id, img_id)
-            images.append(
-                ImageResult(
-                    image_id=img_id,
-                    url=img_source.path,
-                    bbox=img_source.bbox,
-                    type="retrieved" if img_group.type == "retrieved" else "user_provided",
-                ))
+            images.append(ImageResult(
+                image_id=img_id,
+                url=img_source.path,
+                bbox=img_source.bbox,
+                type=img_group.type,
+            ))
 
     return ChatResponse(
         session_id=session_id,
