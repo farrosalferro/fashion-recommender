@@ -1,8 +1,8 @@
 from src.backend.app.models.schemas import ImageSource
 import hashlib
 import uuid
-from typing import Optional, Any
-from src.backend.app.models.schemas import Session, UserProvidedImages, RetrievedImages
+from typing import Optional, Any, List
+from src.backend.app.models.schemas import Session, ImageResult, UserProvidedImages, RetrievedImages, MessageHistory, SessionDataResponse
 from langchain_core.messages import AIMessage
 
 
@@ -43,12 +43,40 @@ class SessionManager:
     def get_image_ids(self, session_id: str) -> list[UserProvidedImages | RetrievedImages]:
         return self._sessions[session_id].image_ids_store
 
-    def load_message_history(self, session_id: str) -> list[AIMessage | dict[str, Any]]:
-        return self._sessions[session_id].message_history
+    def load_message_history(self, session_id: str) -> list[dict[str, Any]]:
+        message_history = []
+        for message in self._sessions[session_id].messsage_history:
+            message_history.append({
+                "role": "user" if message.role == "user" else "assistant",
+                "content": message.content,
+            })
 
-    def store_message(self, session_id: str, user_query: dict[str, Any], ai_response: AIMessage) -> None:
-        self._sessions[session_id].message_history.append(user_query)
-        self._sessions[session_id].message_history.append(ai_response)
+        return message_history
+
+    def store_message(
+        self,
+        session_id: str,
+        user_query: str,
+        ai_response: str,
+        user_images: Optional[List[ImageResult]] = None,
+        ai_images: Optional[List[ImageResult]] = None,
+    ) -> None:
+        user_message = MessageHistory(role="user", content=user_query, images=user_images)
+        ai_message = MessageHistory(role="assistant", content=ai_response.content, images=ai_images)
+        self._sessions[session_id].message_history.append(user_message)
+        self._sessions[session_id].message_history.append(ai_message)
 
     def cleanup_session(self, session_id: str):
         del self._sessions[session_id]
+
+    def get_session_data(self, session_id: str) -> Optional[dict]:
+        if session_id not in self._sessions:
+            return None
+
+        session = self._sessions[session_id]
+
+        return SessionDataResponse(
+            session_id=session_id,
+            messages=session.message_history,
+            has_model_image=session.model_image_id is not None,
+        )

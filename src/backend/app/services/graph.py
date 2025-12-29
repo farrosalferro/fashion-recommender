@@ -76,19 +76,20 @@ def invoke_graph(
 
     # load message history and previous image_ids
     message_history = deps.session_manager.load_message_history(session_id)
-    image_ids_history = deps.session_manager.get_image_ids(session_id)
 
-    # check if the last message retrieved images
-    if (len(message_history) > 0 and isinstance(message_history[-1], AIMessage)) \
-        and (len(image_ids_history) > 0 and isinstance(image_ids_history[-1], RetrievedImages)):
+    # TODO: remove this part as the ids are automatically added to the history
+    # image_ids_history = deps.session_manager.get_image_ids(session_id)
+    # # check if the last message retrieved images
+    # if (len(message_history) > 0 and isinstance(message_history[-1], AIMessage)) \
+    #     and (len(image_ids_history) > 0 and isinstance(image_ids_history[-1], RetrievedImages)):
 
-        # converting retrieved images to text
-        retrieved_image_ids_text = "\nRetrieved images:"
-        last_image_ids = image_ids_history[-1].image_ids
-        for i, last_image_id in enumerate(last_image_ids):
-            retrieved_image_ids_text += f"\n{i+1}. {last_image_id}"
-        last_message = message_history.pop().content + retrieved_image_ids_text
-        message_history.append(AIMessage(content=last_message))
+    #     # converting retrieved images to text
+    #     retrieved_image_ids_text = "\nRetrieved images:"
+    #     last_image_ids = image_ids_history[-1].image_ids
+    #     for i, last_image_id in enumerate(last_image_ids):
+    #         retrieved_image_ids_text += f"\n{i+1}. {last_image_id}"
+    #     last_message = message_history.pop().content + retrieved_image_ids_text
+    #     message_history.append(AIMessage(content=last_message))
 
     # converting image urls or local file paths to image ids
     user_provided_image_ids_text = ""
@@ -117,28 +118,52 @@ def invoke_graph(
         "messages": message_history + [query],
         "available_tools": tool_descriptions,
         "session_id": session_id,
-        "image_ids": [user_provided_images] if user_provided_images else [],
+        "image_ids": [],
     }
 
     result = graph.invoke(initial_state)
 
-    # store the messages
-    deps.session_manager.store_message(session_id, query, result["messages"][-1])
+    user_images = []
+    if user_provided_images:
+        for user_img_id in user_provided_images.image_ids:
+            img_source = deps.session_manager.get_image_source(session_id, user_img_id)
+            user_images.append(ImageResult(
+                image_id,
+                url=img_source.path,
+                bbox=img_source.bbox,
+                type="user_provided",
+            ))
 
-    images = []
+    # store the messages
+
+    ai_images = []
+    ai_image_ids_text = ""
     for img_group in result.get("image_ids", []):
-        deps.session_manager.store_image_ids(session_id, img_group)
+        deps.session_manager.store_image_ids(session_id, img_group)  # TODO: fix store and get image ids since images are attached to conversations
+        if img_group.type == "retrieved":
+            ai_image_ids_text += "Retrieved image ids:\n"
+        else:
+            ai_image_ids_text += "Virtual try-on image ids: \n"
         for img_id in img_group.image_ids:
             img_source = deps.session_manager.get_image_source(session_id, img_id)
-            images.append(ImageResult(
+            ai_images.append(ImageResult(
                 image_id=img_id,
                 url=img_source.path,
                 bbox=img_source.bbox,
                 type=img_group.type,
             ))
+            ai_image_ids_text += f"\t{img_id}\n"
+
+    deps.session_manager.store_message(
+        session_id,
+        user_query=query.get("content"),
+        ai_message=result["messages"][-1].content + ai_image_ids_text,
+        user_images=user_images if user_images else None,
+        ai_images=ai_images if ai_images else None,
+    )
 
     return ChatResponse(
         session_id=session_id,
         answer=result.get("answer", ""),
-        images=images if images else None,
+        images=ai_images if ai_images else None,
     )

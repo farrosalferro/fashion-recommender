@@ -114,9 +114,21 @@ class ChatResponse(BaseModel):
     images: Optional[List[ImageResult]] = Field(None, description="Images referenced in the response.")
 
 
+class MessageHistory(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+    images: Optional[List[ImageResult]] = None
+
+
+class SessionDataResponse(BaseModel):
+    session_id: str
+    messages: List[MessageHistory]
+    has_model_image: bool
+
+
 # Session
 class Session(BaseModel):
     image_source_store: dict[str, ImageSource] = Field(default_factory=dict)
     image_ids_store: list[UserProvidedImages | RetrievedImages] = Field(default_factory=list)
-    message_history: list[AIMessage | ToolMessage | dict[str, Any]] = Field(default_factory=list)
+    message_history: list[MessageHistory] = Field(default_factory=list)
     model_image_id: Optional[str] = Field(None, description="User's photo for virtual try-on")

@@ -15,6 +15,20 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const savedSessionId = localStorage.getItem('fashion_session_id');
+
+    if (savedSessionId) {
+      setSessionId(savedSessionId)
+    }
+  }, []);
+
+  useEffect(() => {
+    if (sessionId) {
+      localStorage.setItem('fashion_session_id', sessionId);
+    }
+  }, [sessionId]);
+
   const handleSetModelImage = (file: File | null) => {
     setModelImage(file);
     if (file) {
@@ -22,6 +36,16 @@ export default function Home() {
     } else {
       setModelImagePreview(null);
     }
+  }
+
+  const handleNewChat = () => {
+    localStorage.removeItem('fashion_session_id')
+
+    setSessionId(null);
+    setMessages([]);
+
+    setModelImage(null);
+    setModelImagePreview(null);
   }
 
   const handleSendMessage = async (content: string, images: File[]) => {
@@ -85,6 +109,13 @@ export default function Home() {
           <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
             Fashion Recommender Agent
           </h1>
+
+          <button
+            onClick={handleNewChat}
+            className="px-3 py-1 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+          >
+            New Chat
+          </button>
 
           <div className="flex items-center gap-3">
             <input
