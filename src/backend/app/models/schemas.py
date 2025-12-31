@@ -3,7 +3,6 @@ from typing import Optional, Tuple, Literal, Annotated, List, Dict, Any
 from urllib.parse import urlparse
 from operator import add
 import os
-from langchain_core.messages import AIMessage, ToolMessage
 
 
 # Image
@@ -59,26 +58,18 @@ class ToolCall(BaseModel):
     arguments: dict
 
 
-class RetrievedImages(BaseModel):
-    type: Literal["retrieved"] = Field("retrieved", description="Type discriminator for fashion item images retrieved from wardrobe.")
-    image_ids: list[str] = Field(default_factory=list, description="List of retrieved fashion item image ids.")
-
-
-class UserProvidedImages(BaseModel):
-    type: Literal["user_provided"] = Field("user_provided", description="Type discriminator for fashion item images uploaded by the user.")
-    image_ids: list[str] = Field(default_factory=list, description="List of user provided fashion item image ids.")
-
-
-class VirtualTryOnImages(BaseModel):
-    type: Literal["virtual_try_on"] = Field("virtual_try_on", description="Type discriminator for images created by virtual try-on tool.")
-    image_ids: list[str] = Field(default_factory=list, description="List of virtual try-on image ids.")
+class ImageResult(BaseModel):
+    image_id: str = Field(..., description="The id of the image.")
+    url: Optional[str] = Field(default=None, description="The url or path of the image.")
+    bbox: Optional[Tuple[float, float, float, float]] = Field(default=None, description="The bounding box of the item in the image.")
+    type: Literal["user_provided", "retrieved", "virtual_try_on"] = Field(..., description="The type of the image.")
 
 
 class AgentResponse(BaseModel):
     answer: str = Field(description="Answer to the question.")
     final_answer: bool = False
     tool_calls: List[ToolCall] = Field(default_factory=list)
-    image_ids: RetrievedImages | VirtualTryOnImages | None = None
+    images: List[ImageResult] = Field(default_factory=list)
 
 
 # Graph State
@@ -90,7 +81,7 @@ class State(BaseModel):
     available_tools: List[Dict[str, Any]] = Field(default_factory=list)
     tool_calls: List[ToolCall] = Field(default_factory=list)
     final_answer: bool = False
-    image_ids: list[RetrievedImages | VirtualTryOnImages | UserProvidedImages] = Field(default_factory=list)
+    images: list[ImageResult] = Field(default_factory=list)
 
 
 # Frontend
@@ -99,13 +90,6 @@ class ChatRequest(BaseModel):
     session_id: Optional[str] = Field(None, description="The session id to use for the chat.")
     images: Optional[List[str]] = Field(None, description="The list of image urls or local file paths to the fashion item images.")
     model_image: Optional[str] = Field(None, description="The image url or local path to user's photo for virtual try-on.")
-
-
-class ImageResult(BaseModel):
-    image_id: str
-    url: str
-    bbox: Optional[Tuple[float, float, float, float]] = None
-    type: Literal["user_provided", "retrieved", "virtual_try_on"]
 
 
 class ChatResponse(BaseModel):
@@ -129,6 +113,5 @@ class SessionDataResponse(BaseModel):
 # Session
 class Session(BaseModel):
     image_source_store: dict[str, ImageSource] = Field(default_factory=dict)
-    image_ids_store: list[UserProvidedImages | RetrievedImages] = Field(default_factory=list)
     message_history: list[MessageHistory] = Field(default_factory=list)
     model_image_id: Optional[str] = Field(None, description="User's photo for virtual try-on")

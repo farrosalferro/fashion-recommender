@@ -1,7 +1,8 @@
 import ast
 import inspect
-from typing import Dict, Any
+from typing import Dict, Any, Literal
 from langchain_core.messages import AIMessage
+from src.backend.app.models.schemas import MessageHistory
 
 
 def format_ai_message(response):
@@ -155,3 +156,46 @@ def get_tool_descriptions(function_list):
             descriptions.append(result)
 
     return descriptions if descriptions else "Could not extract tool descriptions"
+
+
+def add_image_ids_to_message(message: str, image_ids: list[str], type: Literal["user_provided", "retrieved", "virtual_try_on"]) -> str:
+    if len(image_ids) == 0:
+        return message
+
+    if type == "user_provided":
+        context = "\nUser provided fashion item image ids:\n"
+    elif type == "retrieved":
+        context = "\nRetrieved image ids:\n"
+    elif type == "virtual_try_on":
+        context = "\nVirtual try-on image ids:\n"
+    else:
+        raise ValueError(f"Invalid image type: {type}")
+
+    for img_id in image_ids:
+        context += f"\t{img_id}\n"
+
+    return message + context
+
+
+def load_message_history_for_llm(message_history: MessageHistory) -> dict[str, Any]:
+    user_provided_image_ids_history = []
+    retrieved_image_ids_history = []
+    virtual_try_on_image_ids_history = []
+    for image in (message_history.images or []):
+        if image.type == "user_provided":
+            user_provided_image_ids_history.append(image.image_id)
+        elif image.type == "retrieved":
+            retrieved_image_ids_history.append(image.image_id)
+        elif image.type == "virtual_try_on":
+            virtual_try_on_image_ids_history.append(image.image_id)
+
+    user_provided_context = add_image_ids_to_message("", user_provided_image_ids_history, type="user_provided")
+    retrieved_context = add_image_ids_to_message("", retrieved_image_ids_history, type="retrieved")
+    virtual_try_on_context = add_image_ids_to_message("", virtual_try_on_image_ids_history, type="virtual_try_on")
+
+    edited_message = {
+        "role": message_history.role,
+        "content": message_history.content + user_provided_context + retrieved_context + virtual_try_on_context
+    }
+
+    return edited_message

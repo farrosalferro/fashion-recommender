@@ -42,13 +42,8 @@ def agent_node(state: State) -> dict:
     )
 
     ai_message = format_ai_message(response)
-    if response.image_ids:
-        # do not insert if the image_ids is the same as the last one
-        if len(response.image_ids.image_ids) > 0:
-            if len(state.image_ids) > 0 and response.image_ids.image_ids == state.image_ids[-1].image_ids:
-                pass
-            else:
-                state.image_ids.append(response.image_ids)
+    for image in (response.images or []):
+        state.images.append(image)
 
     current_run = get_current_run_tree()
 
@@ -65,5 +60,5 @@ def agent_node(state: State) -> dict:
         "iteration": state.iteration + 1,
         "answer": response.answer,
         "final_answer": response.final_answer,
-        "image_ids": state.image_ids
+        "images": state.images
     }

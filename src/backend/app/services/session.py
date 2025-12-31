@@ -2,8 +2,7 @@ from src.backend.app.models.schemas import ImageSource
 import hashlib
 import uuid
 from typing import Optional, Any, List
-from src.backend.app.models.schemas import Session, ImageResult, UserProvidedImages, RetrievedImages, MessageHistory, SessionDataResponse
-from langchain_core.messages import AIMessage
+from src.backend.app.models.schemas import Session, ImageResult, MessageHistory, SessionDataResponse
 
 
 class SessionManager:
@@ -15,11 +14,11 @@ class SessionManager:
         if session_id and session_id in self._sessions:
             return session_id
         elif session_id:
-            self._sessions[session_id] = Session(image_source_store={}, image_ids_store=[], message_history=[])
+            self._sessions[session_id] = Session(image_source_store={}, message_history=[])
             return session_id
         else:
             session_id = str(uuid.uuid4())
-            self._sessions[session_id] = Session(image_source_store={}, image_ids_store=[], message_history=[])
+            self._sessions[session_id] = Session(image_source_store={}, message_history=[])
             return session_id
 
     def get_model_source(self, session_id) -> ImageSource:
@@ -37,21 +36,8 @@ class SessionManager:
     def get_image_source(self, session_id: str, image_id: str) -> ImageSource:
         return self._sessions[session_id].image_source_store[image_id]
 
-    def store_image_ids(self, session_id: str, image_ids: UserProvidedImages | RetrievedImages) -> None:
-        self._sessions[session_id].image_ids_store.append(image_ids)
-
-    def get_image_ids(self, session_id: str) -> list[UserProvidedImages | RetrievedImages]:
-        return self._sessions[session_id].image_ids_store
-
-    def load_message_history(self, session_id: str) -> list[dict[str, Any]]:
-        message_history = []
-        for message in self._sessions[session_id].messsage_history:
-            message_history.append({
-                "role": "user" if message.role == "user" else "assistant",
-                "content": message.content,
-            })
-
-        return message_history
+    def load_message_history(self, session_id: str) -> list[MessageHistory]:
+        return self._sessions[session_id].message_history
 
     def store_message(
         self,
@@ -62,14 +48,14 @@ class SessionManager:
         ai_images: Optional[List[ImageResult]] = None,
     ) -> None:
         user_message = MessageHistory(role="user", content=user_query, images=user_images)
-        ai_message = MessageHistory(role="assistant", content=ai_response.content, images=ai_images)
+        ai_message = MessageHistory(role="assistant", content=ai_response, images=ai_images)
         self._sessions[session_id].message_history.append(user_message)
         self._sessions[session_id].message_history.append(ai_message)
 
     def cleanup_session(self, session_id: str):
         del self._sessions[session_id]
 
-    def get_session_data(self, session_id: str) -> Optional[dict]:
+    def get_session_data(self, session_id: str) -> Optional[SessionDataResponse]:
         if session_id not in self._sessions:
             return None
 
