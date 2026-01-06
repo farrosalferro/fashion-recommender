@@ -33,8 +33,12 @@ def retrieve_item(text_features: List[float], q_client: QdrantClient, top_k: int
     payloads = []
     for text_feature in text_features:
         payloads.append(
-            q_client.query_points(collection_name="ctl_dataset_train_sample_500", query=text_feature, with_payload=True,
-                                  limit=top_k).points[0].payload)
+            q_client.query_points(
+                collection_name=settings.collection_name,
+                query=text_feature,
+                with_payload=True,
+                limit=top_k,
+            ).points[0].payload)
 
     images = [ImageSource(path=item["image_url"], bbox=item["bbox"]) for item in payloads]
 

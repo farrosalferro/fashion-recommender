@@ -15,9 +15,11 @@ wheels/
 openai_api_key.txt
 .env
 
-# data
-data/
 notebooks/
 qdrant_storage/
 scraper/
 examples/
+
+# data
+data/ctl
+data/uniqlo_scraper

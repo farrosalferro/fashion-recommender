@@ -1,6 +1,8 @@
 from langsmith import Client
 from typing import Any
 
+url_template = "farrosalferro/{agent}-prompt:latest"
+
 
 class PromptManager:
 
@@ -12,10 +14,10 @@ class PromptManager:
 
     def load_all(self) -> None:
         try:
-            self._prompts["agent"] = self.client.pull_prompt("agent-prompt:v1-0-2")
-            self._prompts["descriptor"] = self.client.pull_prompt("descriptor-prompt:v1-0-0")
-            self._prompts["recommender"] = self.client.pull_prompt("recommender-prompt:v1-0-0")
-            self._prompts["vton"] = self.client.pull_prompt("vton-prompt:v1-0-0")
+            self._prompts["agent"] = self.client.pull_prompt(url_template.format(agent="agent"))
+            self._prompts["descriptor"] = self.client.pull_prompt(url_template.format(agent="descriptor"))
+            self._prompts["recommender"] = self.client.pull_prompt(url_template.format(agent="recommender"))
+            self._prompts["vton"] = self.client.pull_prompt(url_template.format(agent="vton"))
         except Exception as e:
             raise ValueError(f"Failed to load prompts: {e}")
 
@@ -31,6 +33,6 @@ class PromptManager:
 
     def refresh(self, name: str = None) -> None:
         if name:
-            self._prompts[name] = self.client.pull_prompt(f"{name}-prompt:latest")
+            self._prompts[name] = self.client.pull_prompt(url_template.format(agent=name))
         else:
             self.load_all()
