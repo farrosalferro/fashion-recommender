@@ -25,3 +25,15 @@ export interface Message {
     images?: ImageResult[];
     timestamp: Date;
 }
+
+export interface MessageHistory {
+    role: "user" | "assistant";
+    content: string;
+    images: ImageResult[] | null;
+}
+
+export interface SessionDataResponse {
+    session_id: string;
+    messages: MessageHistory[];
+    has_model_image: boolean;
+}

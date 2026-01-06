@@ -1,12 +1,13 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+
 from src.backend.app.dependencies import deps
 from src.backend.app.config import settings
 from qdrant_client import QdrantClient
 from transformers import CLIPModel, CLIPProcessor
 from src.backend.app.services.session import SessionManager
-from src.backend.app.models.schemas import ChatRequest
+from src.backend.app.models.schemas import ChatRequest, SessionDataResponse
 from src.backend.app.services.graph import invoke_graph
 from src.backend.app.prompt_manager import PromptManager
 
@@ -50,3 +51,12 @@ async def chat(
         clip: tuple = Depends(get_clip_model),
 ):
     return invoke_graph(request, qdrant_client, clip)
+
+
+@app.get("/session/{session_id}")
+async def get_session(session_id: str):
+    session_data = deps.session_manager.get_session_data(session_id)
+    if session_data is None:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    return session_data

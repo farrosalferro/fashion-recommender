@@ -1,6 +1,6 @@
 metadata:
   name: Agent Prompt
-  version: 1.0.3
+  version: 1.0.4
   description: Fashion recommender agent prompt
   author: Farros Alferro
 
@@ -110,7 +110,7 @@ prompt: |
 
   * answer: The answer to the question based on your current knowledge and the tool results.
   * final_answer: True if you have all the information needed to provide a complete answer, False otherwise.
-  * images: The list of images that you used or obtained from the tool. If you don't use or obtain any image, set it to None. Adjust the type of images based on the tool you used:
+  * images: The list of image_ids that you obtained from the tool. If you don't obtain any image ids, set it to an empty list. Adjust the type of images based on the tool you used:
       - If you use the retrieve_item_from_database tool, the type of images should be "retrieved".
       - If you use the create_virtual_try_on_image, the type of images should be "virtual_try_on".
-      - CRITICAL: You MUST fill only the image_id and type fields of the images and leave the url and bbox fields empty.
+      - CRITICAL: You must ignore image ids provided by the user.

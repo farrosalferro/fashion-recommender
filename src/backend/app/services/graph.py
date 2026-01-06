@@ -115,24 +115,22 @@ def invoke_graph(
 
     result = graph.invoke(initial_state)
 
-    # store the messages
-
-    result_images = result.get("images", [])
+    ai_result_images = result.get("images", [])
     ai_images = []
-    for result_image in result_images:
-        img_source = deps.session_manager.get_image_source(session_id, result_image.image_id)
+    for ai_result_image in ai_result_images:
+        img_source = deps.session_manager.get_image_source(session_id, ai_result_image.image_id)
         ai_images.append(ImageResult(
-            image_id=result_image.image_id,
+            image_id=ai_result_image.image_id,
             url=img_source.path,
             bbox=img_source.bbox,
-            type=result_image.type,
+            type=ai_result_image.type,
         ))
 
     # store the original messages
     deps.session_manager.store_message(
         session_id,
         user_query=chat_request.query,
-        ai_message=result.get("answer", ""),
+        ai_response=result.get("answer", ""),
         user_images=user_provided_images if user_provided_images else None,
         ai_images=ai_images if ai_images else None,
     )

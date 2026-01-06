@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import ChatMessage from "@/components/ChatMessage";
 import ChatInput from "@/components/ChatInput";
 import { Message, ChatResponse } from "@/types";
-import { filesToBase64, fileToBase64, sendMessage } from "@/lib/api";
+import { filesToBase64, fileToBase64, sendMessage, getSession } from "@/lib/api";
 
 
 export default function Home() {
@@ -13,6 +13,7 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -20,6 +21,7 @@ export default function Home() {
 
     if (savedSessionId) {
       setSessionId(savedSessionId)
+      loadSessionHistory(savedSessionId);
     }
   }, []);
 
@@ -46,6 +48,30 @@ export default function Home() {
 
     setModelImage(null);
     setModelImagePreview(null);
+  }
+
+  const loadSessionHistory = async (sid: string) => {
+    setIsLoadingHistory(true);
+    try {
+      const sessionData = await getSession(sid);
+      if (sessionData) {
+        setMessages(sessionData.messages.map((message, index) => ({
+          id: `history-${index}-${Date.now()}`,
+          role: message.role,
+          content: message.content,
+          images: message.images || undefined,
+          timestamp: new Date(),
+        })));
+      } else {
+        localStorage.removeItem('fashion_session_id');
+        setSessionId(null);
+      }
+    } catch (error) {
+      console.error("Failed to load session", error);
+      localStorage.removeItem('fashion_session_id');
+      setSessionId(null);
+    }
+    setIsLoadingHistory(false);
   }
 
   const handleSendMessage = async (content: string, images: File[]) => {

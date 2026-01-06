@@ -65,11 +65,16 @@ class ImageResult(BaseModel):
     type: Literal["user_provided", "retrieved", "virtual_try_on"] = Field(..., description="The type of the image.")
 
 
+class AgentImageResult(BaseModel):
+    image_id: str = Field(..., description="The id of the image.")
+    type: Literal["retrieved", "virtual_try_on"] = Field(..., description="The type of the image.")
+
+
 class AgentResponse(BaseModel):
     answer: str = Field(description="Answer to the question.")
     final_answer: bool = False
     tool_calls: List[ToolCall] = Field(default_factory=list)
-    images: List[ImageResult] = Field(default_factory=list)
+    images: List[AgentImageResult] = Field(default_factory=list)
 
 
 # Graph State
@@ -81,7 +86,7 @@ class State(BaseModel):
     available_tools: List[Dict[str, Any]] = Field(default_factory=list)
     tool_calls: List[ToolCall] = Field(default_factory=list)
     final_answer: bool = False
-    images: list[ImageResult] = Field(default_factory=list)
+    images: List[AgentImageResult] = Field(default_factory=list)
 
 
 # Frontend

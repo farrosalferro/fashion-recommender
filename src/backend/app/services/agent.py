@@ -19,7 +19,12 @@ from src.backend.app.dependencies import deps
 )
 def agent_node(state: State) -> dict:
 
-    prompt_template = deps.prompt_manager.get_prompt("agent")
+    # prompt_template = deps.prompt_manager.get_prompt("agent")
+    # FOR DEBUGGING ONLY
+    import yaml
+    agent_prompt_path = "/home/farrosalferro/projects/fashion_recommender/prompts/agent.yaml"
+    with open(agent_prompt_path, "r") as file:
+        prompt_template = yaml.safe_load(file)["prompt"]
 
     template = Template(prompt_template)
 

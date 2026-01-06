@@ -1,4 +1,4 @@
-import { ChatRequest, ChatResponse } from "@/types";
+import { ChatRequest, ChatResponse, SessionDataResponse } from "@/types";
 
 const API_BASE_URL = "http://localhost:8000";
 
@@ -30,3 +30,21 @@ export async function sendMessage(request: ChatRequest): Promise<ChatResponse> {
 
     return response.json();
 }
+
+export async function getSession(sessionId: string): Promise<SessionDataResponse | null> {
+    const response = await fetch(`${API_BASE_URL}/session/${sessionId}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    if (response.status === 404) {
+        return null;
+    }
+    if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+    }
+
+    return response.json();
+}   
